@@ -1,25 +1,24 @@
-name: Deploy Resume to S3
+name: Deploy to S3
 
 on:
   push:
     branches:
-      - main
+      - main  # This ensures it runs every time you push code to the main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Deploy resume website to S3
-      uses: jakejarvis/s3-sync-action@v0.5.1
-      with:
-        args: --delete --exclude '.git*'
-      env:
-        AWS_S3_BUCKET: dipali-portfolio-2026
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: us-east-1
-        SOURCE_DIR: "./" # This tells the action to look in the root folder
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Double check this matches your bucket region!
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude ".git/*" --exclude ".github/*"
